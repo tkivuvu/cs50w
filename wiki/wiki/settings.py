@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CSRF_TRUSTED_ORIGINS = ['https://humble-funicular-jjj7657g4j5j3pgv4-8080.app.github.dev/']
 
 # Application definition
 

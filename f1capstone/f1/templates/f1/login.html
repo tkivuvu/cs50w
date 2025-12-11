@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Log in • F1 Capstone{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+    <div class="card bg-black border-secondary">
+      <div class="card-body">
+        <h1 class="h4 mb-3">Log in</h1>
+
+        {% if form.errors %}
+          <div class="alert alert-danger">Please check your username and password.</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+          </div>
+
+          {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-light text-dark">Log in</button>
+          </div>
+        </form>
+
+        <hr class="border-secondary my-4">
+        <div class="small">
+          New here? <a href="{% url 'f1:signup' %}">Create an account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

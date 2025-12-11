@@ -1,0 +1,3 @@
+:root { --radius: 1rem; }
+.card { border-radius: var(--radius); }
+.table { border-radius: var(--radius); overflow: hidden; }

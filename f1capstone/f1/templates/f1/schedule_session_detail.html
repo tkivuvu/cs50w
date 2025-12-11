@@ -1,0 +1,115 @@
+{% extends 'layout.html' %}
+{% block title %}{{ kind|title }} • Round {{ round }} • {{ year }} • F1 Capstone{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">{{ kind|title }} — Round {{ round }} ({{ year }})</h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'f1:schedule_sessions' year round %}">
+      Back to Sessions
+    </a>
+  </div>
+
+  {% if not race %}
+    <div class="alert alert-secondary">No data available.</div>
+  {% endif %}
+
+  {% if kind == 'race' and race.Results %}
+    <div class="table-responsive mb-4">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>P</th><th>Driver</th><th>Constructor</th><th>Grid</th><th>Laps</th><th>Time / Status</th><th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in race.Results %}
+            <tr>
+              <td>{{ r.position }}</td>
+              <td>{{ r.Driver.givenName }} {{ r.Driver.familyName }}</td>
+              <td>{{ r.Constructor.name }}</td>
+              <td>{{ r.grid }}</td>
+              <td>{{ r.laps }}</td>
+              <td>
+                {% if r.Time and r.Time.time %}{{ r.Time.time }}{% else %}{{ r.status }}{% endif %}
+              </td>
+              <td>{{ r.points }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if kind == 'qualifying' and race.QualifyingResults %}
+    <div class="table-responsive mb-4">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>P</th><th>Driver</th><th>Constructor</th><th>Q1</th><th>Q2</th><th>Q3</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in race.QualifyingResults %}
+            <tr>
+              <td>{{ q.position }}</td>
+              <td>{{ q.Driver.givenName }} {{ q.Driver.familyName }}</td>
+              <td>{{ q.Constructor.name }}</td>
+              <td>{{ q.Q1|default:'—' }}</td>
+              <td>{{ q.Q2|default:'—' }}</td>
+              <td>{{ q.Q3|default:'—' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if kind == 'sprint' and race.SprintResults %}
+    <div class="table-responsive mb-4">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>P</th><th>Driver</th><th>Constructor</th><th>Laps</th><th>Time / Status</th><th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in race.SprintResults %}
+            <tr>
+              <td>{{ s.position }}</td>
+              <td>{{ s.Driver.givenName }} {{ s.Driver.familyName }}</td>
+              <td>{{ s.Constructor.name }}</td>
+              <td>{{ s.laps }}</td>
+              <td>
+                {% if s.Time and s.Time.time %}{{ s.Time.time }}{% else %}{{ s.status }}{% endif %}
+              </td>
+              <td>{{ s.points }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if kind == 'pitstops' and race.PitStops %}
+    <div class="table-responsive mb-4">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Driver</th><th>Lap</th><th>Stop #</th><th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in race.PitStops %}
+            <tr>
+              <td>{{ p.driverId }}</td>
+              <td>{{ p.lap }}</td>
+              <td>{{ p.stop }}</td>
+              <td>{{ p.duration }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  
+{% endblock %}

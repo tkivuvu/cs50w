@@ -1,0 +1,260 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}F1 Analysis{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'f1/css/styles.css' %}" rel="stylesheet">
+  </head>
+  <body class="bg-dark text-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary sticky-top">
+      <div class="container">
+        <a class="navbar-brand fw-semibold" href="{% url 'f1:index' %}">F1 Analysis</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbars">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navbars" class="collapse navbar-collapse">
+          {% with current=request.resolver_match.url_name %}
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link{% if current == 'index' %} active{% endif %}" href="{% url 'f1:index' %}">Home</a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if current == 'schedule_year' or current == 'schedule_sessions' %} active{% endif %}"
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Schedule
+              </a>
+              <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                {% if SCHEDULE_MENU.items %}
+                  {% for it in SCHEDULE_MENU.items %}
+                    <li><a class="dropdown-item" href="{{ it.url }}">{{ it.label }}</a></li>
+                  {% endfor %}
+                  <li><hr class="dropdown-divider"></li>
+                {% endif %}
+                <li>
+                  <a class="dropdown-item fw-semibold" href="{{ SCHEDULE_MENU.year_url }}">
+                    Full {{ SCHEDULE_MENU.year }} Schedule
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if current == 'results_season' or current == 'standings_drivers' or current == 'standings_constructors' or current == 'results_year_hub' %} active{% endif %}"
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Results
+              </a>
+              <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                <li>
+                  <a class="dropdown-item" href="{{ RESULTS_MENU.season_results_url }}">
+                    Season Results ({{ RESULTS_MENU.year }})
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ RESULTS_MENU.driver_standings_url }}">
+                    Driver Standings ({{ RESULTS_MENU.year }})
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ RESULTS_MENU.constructor_standings_url }}">
+                    Constructor Standings ({{ RESULTS_MENU.year }})
+                  </a>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+                <li class="px-3 py-2">
+                  <form class="d-flex gap-2" action="{% url 'f1:results_find' %}" method="get">
+                    <input class="form-control form-control-sm bg-black text-light border-secondary"
+                           type="search" name="year" placeholder="Season (e.g. 2018)"
+                           inputmode="numeric" pattern="\d{4}" minlength="4" maxlength="4"
+                           aria-label="Season year">
+                    <button class="btn btn-sm btn-outline-light" type="submit">Go</button>
+                  </form>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if current == 'driver_detail' or current == 'drivers' %} active{% endif %}"
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="driversDropdownToggle">
+                Drivers
+              </a>
+              <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end p-2" style="min-width: 320px;">
+                <div class="px-2 pb-2">
+                  <input id="driversFilter" class="form-control form-control-sm bg-black text-light border-secondary"
+                         type="search" placeholder="Filter drivers..." aria-label="Filter drivers">
+                </div>
+                <ul id="driversList" class="list-unstyled mb-0" style="max-height: 320px; overflow:auto;">
+                  {% for it in DRIVERS_MENU.items %}
+                    <li class="px-2">
+                      <a class="dropdown-item d-flex align-items-center gap-2 py-2"
+                         href="{% url 'f1:driver_detail' it.driverId %}">
+                        <img
+                          {% if it.driverId == 'antonelli' %}
+                            data-src="{% static 'f1/img/drivers/thumbs/antonelli-kimi-andrea.png' %}"
+                          {% else %}
+                            data-src="{% static 'f1/img/drivers/thumbs/' %}{{ it.thumb }}"
+                          {% endif %}
+                          data-fallback="{% static 'f1/img/drivers/thumbs/' %}{{ it.driverId }}.png"
+                          alt="{{ it.label }}"
+                          width="28" height="28"
+                          class="drivers-thumb flex-shrink-0"
+                          style="object-fit:cover;border:1px solid var(--bs-secondary);border-radius:6px;"
+                        >
+                        <span class="drivers-name">{{ it.label }}</span>
+                      </a>
+                    </li>
+                  {% empty %}
+                    <li class="px-3 py-2 text-secondary small">No drivers found.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if current == 'constructor_detail' or current == 'teams' %} active{% endif %}"
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="constructorsDropdownToggle">
+                Teams
+              </a>
+              <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end p-2" style="min-width: 320px;">
+                <div class="px-2 pb-2">
+                  <input id="constructorsFilter" class="form-control form-control-sm bg-black text-light border-secondary"
+                         type="search" placeholder="Filter teams..." aria-label="Filter teams">
+                </div>
+                <ul id="constructorsList" class="list-unstyled mb-0" style="max-height: 320px; overflow:auto;">
+                  {% for it in CONSTRUCTORS_MENU.items %}
+                    <li class="px-2">
+                      <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{{ it.url }}">
+                        <img
+                          data-src="{% static 'f1/img/constructors/thumbs/' %}{{ it.thumb }}"
+                          data-fallback="{% static 'f1/img/constructors/thumbs/' %}{{ it.constructorId }}.png"
+                          alt="{{ it.label }}"
+                          width="28" height="28"
+                          class="constructors-thumb flex-shrink-0"
+                          style="object-fit:cover;border:1px solid var(--bs-secondary);border-radius:6px;"
+                        >
+                        <span class="constructors-name">{{ it.label }}</span>
+                      </a>
+                    </li>
+                  {% empty %}
+                    <li class="px-3 py-2 text-secondary small">No teams found.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </li>
+
+            {% if user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link{% if current == 'my_hub' %} active{% endif %}" href="{% url 'f1:my_hub' %}">My Hub</a>
+              </li>
+              <li class="nav-item d-flex align-items-center">
+                <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="nav-link btn btn-link text-decoration-none p-0 align-baseline"
+                          style="line-height: 1.5; vertical-align: middle;">
+                    Logout
+                  </button>
+                </form>
+              </li>
+
+            {% else %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'f1:signup' %}">Sign up</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'login' %}">Log in</a>
+              </li>
+            {% endif %}
+          </ul>
+          {% endwith %}
+        </div>
+      </div>
+    </nav>
+
+    {% if API_DEGRADED %}
+      <div class="alert alert-warning text-center rounded-0 mb-0 py-2 small"
+           role="alert"
+           style="border-color:#9c7c00;background-color:#2a2300;color:#ffd666;">
+        {{ API_DEGRADED_MESSAGE }}
+      </div>
+    {% endif %}
+
+    <main class="container py-4">
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const dToggle = document.getElementById('driversDropdownToggle');
+        const dList   = document.getElementById('driversList');
+        const dFilter = document.getElementById('driversFilter');
+
+        dToggle?.addEventListener('click', function () {
+          const imgs = dList?.querySelectorAll('img.drivers-thumb[data-src]');
+          imgs?.forEach(img => {
+            if (!img.getAttribute('src')) {
+              img.onerror = function () {
+                const tried = img.dataset.tried === '1';
+                if (!tried && img.dataset.fallback) {
+                  img.dataset.tried = '1';
+                  img.src = img.dataset.fallback;
+                } else {
+                  img.style.display = 'none';
+                }
+              };
+              img.src = img.getAttribute('data-src');
+            }
+          });
+        });
+
+        dFilter?.addEventListener('input', function () {
+          const q = (dFilter.value || '').toLowerCase();
+          const items = dList?.querySelectorAll('li');
+          items?.forEach(li => {
+            const name = (li.querySelector('.drivers-name')?.textContent || '').toLowerCase();
+            li.style.display = name.includes(q) ? '' : 'none';
+          });
+        });
+
+        const cToggle = document.getElementById('constructorsDropdownToggle');
+        const cList   = document.getElementById('constructorsList');
+        const cFilter = document.getElementById('constructorsFilter');
+
+        cToggle?.addEventListener('click', function () {
+          const imgs = cList?.querySelectorAll('img.constructors-thumb[data-src]');
+          imgs?.forEach(img => {
+            if (!img.getAttribute('src')) {
+              img.onerror = function () {
+                const tried = img.dataset.tried === '1';
+                if (!tried && img.dataset.fallback) {
+                  img.dataset.tried = '1';
+                  img.src = img.dataset.fallback;
+                } else {
+                  img.style.display = 'none';
+                }
+              };
+              img.src = img.getAttribute('data-src');
+            }
+          });
+        });
+
+        cFilter?.addEventListener('input', function () {
+          const q = (cFilter.value || '').toLowerCase();
+          const items = cList?.querySelectorAll('li');
+          items?.forEach(li => {
+            const name = (li.querySelector('.constructors-name')?.textContent || '').toLowerCase();
+            li.style.display = name.includes(q) ? '' : 'none';
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Sign up • F1 Capstone{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-7 col-lg-6">
+    <div class="card bg-black border-secondary">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-3">Create your account</h1>
+
+        {% if form.errors %}
+          <div class="alert alert-danger">Please fix the highlighted fields.</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Username</label>
+              {{ form.username|add_class:"form-control bg-dark text-light border-secondary" }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email (optional)</label>
+              {{ form.email|add_class:"form-control bg-dark text-light border-secondary" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Password</label>
+              {{ form.password1|add_class:"form-control bg-dark text-light border-secondary" }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Confirm password</label>
+              {{ form.password2|add_class:"form-control bg-dark text-light border-secondary" }}
+            </div>
+          </div>
+
+          <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-light" type="submit">Create account</button>
+          </div>
+        </form>
+
+        <hr class="border-secondary my-4">
+        <p class="mb-0 small text-secondary">
+          Already have an account?
+          <a href="{% url 'login' %}" class="link-light">Log in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

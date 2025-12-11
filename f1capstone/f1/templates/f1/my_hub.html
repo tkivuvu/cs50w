@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% block title %}My Hub • F1 Capstone{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">My Hub</h1>
+
+{% if messages %}
+  {% for m in messages %}
+    <div class="alert alert-{{ m.tags|default:'secondary' }}">{{ m }}</div>
+  {% endfor %}
+{% endif %}
+
+{% if news_enabled and news_provider %}
+  <p class="text-secondary small mb-4">
+    News provided by <span class="badge text-bg-secondary">{{ news_provider }}</span>
+  </p>
+{% endif %}
+
+{% if global_news %}
+  <div class="card bg-black border-secondary mb-4">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Global F1 News</h2>
+      <ul class="mb-0 ps-3">
+        {% for a in global_news %}
+          <li class="mb-2">
+            <a href="{{ a.url }}" target="_blank" rel="noopener" class="link-light">
+              {{ a.title }}
+            </a>
+            {% if a.source %}
+              <span class="text-secondary small"> — {{ a.source }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-12 col-lg-6">
+    <div class="card bg-black border-secondary h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Favorite Drivers</h2>
+        {% if fav_drivers %}
+          <ul class="list-group list-group-flush">
+            {% for fd in fav_drivers %}
+              <li class="list-group-item bg-black text-light border-secondary">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center gap-2">
+                    <a class="link-light" href="{% url 'f1:driver_detail' fd.driver_id %}">
+                      {{ fd.driver_id|title }}
+                    </a>
+                    <span class="text-secondary small">· added {{ fd.added_at|date:"M j, H:i" }}</span>
+                  </div>
+                  <form method="post" action="{% url 'f1:favorite_driver_toggle' fd.driver_id %}" class="m-0 p-0">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-light" type="submit">Remove</button>
+                  </form>
+                </div>
+
+                {% if news_enabled and fd.news %}
+                  <div class="mt-3">
+                    <div class="text-secondary small mb-2">Latest articles</div>
+                    <ul class="mb-0 ps-3">
+                      {% for a in fd.news %}
+                        <li class="mb-1">
+                          <a href="{{ a.url }}" target="_blank" rel="noopener" class="link-light">
+                            {{ a.title }}
+                          </a>
+                          {% if a.source %}
+                            <span class="text-secondary small"> — {{ a.source }}</span>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% elif news_enabled %}
+                  <div class="mt-3 text-secondary small">No recent articles found.</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-secondary mb-0">You haven't favorited any drivers yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card bg-black border-secondary h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Favorite Teams</h2>
+        {% if fav_teams %}
+          <ul class="list-group list-group-flush">
+            {% for ft in fav_teams %}
+              <li class="list-group-item bg-black text-light border-secondary">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center gap-2">
+                    <a class="link-light" href="{% url 'f1:constructor_detail' ft.constructor_id %}">
+                      {{ ft.constructor_id|title }}
+                    </a>
+                    <span class="text-secondary small">· added {{ ft.added_at|date:"M j, H:i" }}</span>
+                  </div>
+                  <form method="post" action="{% url 'f1:favorite_constructor_toggle' ft.constructor_id %}" class="m-0 p-0">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-light" type="submit">Remove</button>
+                  </form>
+                </div>
+
+                {% if news_enabled and ft.news %}
+                  <div class="mt-3">
+                    <div class="text-secondary small mb-2">Latest articles</div>
+                    <ul class="mb-0 ps-3">
+                      {% for a in ft.news %}
+                        <li class="mb-1">
+                          <a href="{{ a.url }}" target="_blank" rel="noopener" class="link-light">
+                            {{ a.title }}
+                          </a>
+                          {% if a.source %}
+                            <span class="text-secondary small"> — {{ a.source }}</span>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% elif news_enabled %}
+                  <div class="mt-3 text-secondary small">No recent articles found.</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-secondary mb-0">You haven't favorited any teams yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

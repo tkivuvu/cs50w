@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block title %}{{ driver.givenName }} {{ driver.familyName }} • {{ year }} • F1 Capstone{% endblock %}
+
+{% block content %}
+  <div class="row g-4 align-items-center mb-4">
+    <div class="col-12 col-md-auto text-center">
+      <img
+        src="{% static 'f1/img/drivers/full/' %}{{ full_img }}"
+        alt="{{ driver.givenName }} {{ driver.familyName }}"
+        width="240" height="240"
+        style="
+          object-fit: cover;
+          object-position: top center;   /* you can tweak to '0 10%' if you want a higher crop */
+          border: 1px solid var(--bs-secondary);
+          border-radius: 16px;
+          margin-right: 20px;
+          box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        "
+        onerror="this.style.display='none'">
+    </div>
+
+    <div class="col">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <div class="d-flex align-items-center gap-2">
+          <img
+            src="{% static 'f1/img/flags/' %}{{ nationality }}.png"
+            alt="{{ driver.nationality }}"
+            width="24" height="16"
+            style="object-fit:cover;border:1px solid var(--bs-secondary);border-radius:2px;"
+            onerror="this.style.display='none'">
+          <h1 class="h4 mb-0">{{ driver.givenName }} {{ driver.familyName }}</h1>
+        </div>
+
+        <div class="ms-3">
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'f1:favorite_driver_toggle' driver.driverId %}">
+              {% csrf_token %}
+              <button class="btn btn-sm {% if is_favorite %}btn-warning text-dark{% else %}btn-outline-light{% endif %}"
+                      type="submit"
+                      aria-label="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                {% if is_favorite %}★ Favorited{% else %}☆ Add to Favorites{% endif %}
+              </button>
+            </form>
+          {% else %}
+            <a class="btn btn-sm btn-outline-light" href="{% url 'login' %}?next={{ request.path|urlencode }}">
+              ☆ Log in to favorite
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="text-secondary small">
+        No. {{ driver.permanentNumber|default:'—' }}
+        • Nationality: {{ driver.nationality|default:'—' }}
+        • Constructor: {{ constructor_name|default:'—' }}
+      </div>
+      <div class="mt-2">
+        <span class="badge text-bg-light text-dark">WDC Pos: {{ wdc_pos|default:'—' }}</span>
+        <span class="badge text-bg-secondary ms-2">Points: {{ wdc_pts|default:'—' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-2">
+    <div class="col-12 col-lg-6">
+      <div class="card bg-black border-secondary h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <h2 class="h6 mb-0">Grand Prix — {{ year }}</h2>
+            <small class="text-secondary">* DNFs = mechanical/retirements only</small>
+          </div>
+          <div class="row row-cols-2 row-cols-sm-3 g-2 mt-2">
+            <div class="col"><div class="p-2 border border-secondary rounded-2">GPs: <strong>{{ gp_entered }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Points: <strong>{{ gp_points|floatformat:0 }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Wins: <strong>{{ gp_wins }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Podiums: <strong>{{ gp_podiums }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Poles: <strong>{{ gp_poles }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Top 10s: <strong>{{ gp_top10 }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">DNFs*: <strong>{{ gp_dnfs }}</strong></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card bg-black border-secondary h-100">
+        <div class="card-body">
+          <h2 class="h6">Sprint — {{ year }}</h2>
+          <div class="row row-cols-2 row-cols-sm-3 g-2">
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Sprints: <strong>{{ sp_entered }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Points: <strong>{{ sp_points|floatformat:0 }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Wins: <strong>{{ sp_wins }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Podiums: <strong>{{ sp_podiums }}</strong></div></div>
+            <div class="col"><div class="p-2 border border-secondary rounded-2">Top 8s: <strong>{{ sp_top8 }}</strong></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-black border-secondary">
+    <div class="card-body">
+      <h2 class="h6">Last 5 Grands Prix — Race Results</h2>
+      {% if last5_gp %}
+        <div class="table-responsive">
+          <table class="table table-dark table-striped align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>Grand Prix</th>
+                <th>Pos</th>
+                <th>Points</th>
+                <th>Status / Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in last5_gp %}
+                <tr>
+                  <td>{{ r.round }}</td>
+                  <td>{{ r.raceName }}</td>
+                  <td>{{ r.position|default:'—' }}</td>
+                  <td>{{ r.points|default:'0' }}</td>
+                  <td>{% if r.time %}{{ r.time }}{% else %}{{ r.status }}{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-secondary mb-0">No GP race results recorded yet this season.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+

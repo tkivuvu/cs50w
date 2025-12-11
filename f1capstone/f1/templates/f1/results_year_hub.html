@@ -1,0 +1,75 @@
+{% extends 'layout.html' %}
+{% block title %}Results Overview • {{ year }} • F1 Capstone{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Results Overview — {{ year }}</h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'f1:schedule_year' year %}">
+      View {{ year }} Schedule
+    </a>
+  </div>
+
+  {% if standings_round %}
+    <p class="text-secondary small mb-3">
+      Standings reflect results through round {{ standings_round }}.
+    </p>
+  {% endif %}
+
+  <section class="mb-4">
+    <h2 class="h6 mb-2">Driver Standings</h2>
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>P</th>
+            <th>Driver</th>
+            <th>Constructor</th>
+            <th>Wins</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in driver_rows %}
+            <tr>
+              <td>{{ row.pos }}</td>
+              <td>{{ row.driver }}</td>
+              <td>{{ row.constructor }}</td>
+              <td>{{ row.wins }}</td>
+              <td>{{ row.points }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-secondary">No driver standings.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="h6 mb-2">Constructor Standings</h2>
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th>P</th>
+            <th>Constructor</th>
+            <th>Wins</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in constructor_rows %}
+            <tr>
+              <td>{{ row.pos }}</td>
+              <td>{{ row.constructor }}</td>
+              <td>{{ row.wins }}</td>
+              <td>{{ row.points }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-secondary">No constructor standings.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

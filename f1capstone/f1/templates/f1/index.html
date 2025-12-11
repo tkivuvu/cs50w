@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}F1 Analysis • Home{% endblock %}
+
+{% block content %}
+  <section class="text-center mb-5">
+    <p class="text-uppercase text-secondary small mb-1">CS50W Capstone Project</p>
+    <h1 class="display-6 fw-semibold mb-3">F1 Analysis</h1>
+    <p class="text-secondary mx-auto" style="max-width: 720px;">
+      A Formula 1 data hub powered by the Jolpi/Ergast API. Explore live and historical race
+      data, detailed driver and team profiles, and build your own personalized F1 hub with favorites
+      and news.
+    </p>
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+      <span class="badge rounded-pill text-bg-secondary">Live season data</span>
+      <span class="badge rounded-pill text-bg-secondary">Driver &amp; team stats</span>
+      <span class="badge rounded-pill text-bg-secondary">Personalized “My Hub”</span>
+      <span class="badge rounded-pill text-bg-secondary">F1 news integration</span>
+    </div>
+  </section>
+
+  <div class="row g-4 align-items-stretch">
+    <div class="col-12 col-lg-7">
+      <div class="card bg-black border-secondary h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">What you can do here</h2>
+          <div class="vstack gap-3 text-secondary small">
+
+            <div class="d-flex gap-3">
+              <div class="flex-shrink-0">
+                <span class="badge text-bg-light text-dark">Schedule</span>
+              </div>
+              <div>
+                Browse the <strong>current season calendar</strong>, see which rounds are completed,
+                and open detailed views for race, qualifying, sprint, and pit stop sessions.
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div class="flex-shrink-0">
+                <span class="badge text-bg-light text-dark">Results</span>
+              </div>
+              <div>
+                View <strong>season results</strong> with driver and constructor standings, and look up
+                <strong>past seasons</strong> directly from the navigation bar.
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div class="flex-shrink-0">
+                <span class="badge text-bg-light text-dark">Drivers</span>
+              </div>
+              <div>
+                Open rich <strong>driver detail pages</strong> with photos, national flags, team and
+                livery number, WDC position &amp; points, full GP &amp; sprint stat summaries, and the
+                driver's recent race form.
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div class="flex-shrink-0">
+                <span class="badge text-bg-light text-dark">Teams</span>
+              </div>
+              <div>
+                Explore <strong>team pages</strong> showing both drivers, the car livery, and aggregated
+                GP &amp; sprint stats for each constructor across the season.
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div class="flex-shrink-0">
+                <span class="badge text-bg-light text-dark">My Hub</span>
+              </div>
+              <div>
+                Create an account, <strong>favorite drivers and teams</strong>, and get a personalized
+                <strong>My Hub</strong> with quick links to your favorites plus related F1 news articles.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card bg-black border-secondary h-100">
+        <div class="card-body d-flex flex-column h-100">
+
+          <h2 class="h5 mb-3">Jump in</h2>
+
+          <div class="row row-cols-1 g-2 mb-3">
+            <div class="col">
+              <a href="{% url 'f1:results_season' 2025 %}" class="text-decoration-none">
+                <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
+                  <div class="small text-secondary">Season overview</div>
+                  <div class="fw-semibold">2025 Season Results</div>
+                </div>
+              </a>
+            </div>
+            <div class="col">
+              <a href="{% url 'f1:standings_drivers' 2025 %}" class="text-decoration-none">
+                <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
+                  <div class="small text-secondary">Championship table</div>
+                  <div class="fw-semibold">2025 Driver Standings</div>
+                </div>
+              </a>
+            </div>
+            <div class="col">
+              <a href="{% url 'f1:standings_constructors' 2025 %}" class="text-decoration-none">
+                <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
+                  <div class="small text-secondary">Teams' battle</div>
+                  <div class="fw-semibold">2025 Constructor Standings</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <h3 class="h6 mb-2">Your account</h3>
+          <div class="d-grid gap-2 mb-3">
+            {% if user.is_authenticated %}
+              <a href="{% url 'f1:my_hub' %}" class="btn btn-light btn-sm">
+                Go to My Hub
+              </a>
+              <p class="text-secondary small mb-0">
+                Manage your favorite drivers and teams and see tailored F1 news in one place.
+              </p>
+            {% else %}
+              <a href="{% url 'f1:signup' %}" class="btn btn-light btn-sm">
+                Create an account
+              </a>
+              <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+                Log in
+              </a>
+              <p class="text-secondary small mb-0">
+                Accounts let you favorite drivers and teams and unlock the personalized My Hub view.
+              </p>
+            {% endif %}
+          </div>
+
+          <div class="mt-auto pt-3 border-top border-secondary">
+            <p class="text-secondary small mb-0">
+              Live F1 data comes from the Jolpi/Ergast API. If the service is slow or offline, a
+              warning banner will appear at the top of the site and some stats may be temporarily
+              missing.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

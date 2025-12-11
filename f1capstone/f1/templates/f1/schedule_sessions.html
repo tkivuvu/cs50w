@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block title %}Round {{ round }} Sessions • {{ year }} • F1 Capstone{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Round {{ round }} — Sessions</h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'f1:schedule_year' year %}">Back to {{ year }} Schedule</a>
+  </div>
+
+  {% if sessions %}
+    <div class="list-group">
+      {% for s in sessions %}
+        <a class="list-group-item list-group-item-action list-group-item-dark"
+           href="{% url 'f1:schedule_session_detail' year round s.kind %}">
+          {{ s.label }}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-secondary">No session data available yet for this round.</p>
+  {% endif %}
+{% endblock %}

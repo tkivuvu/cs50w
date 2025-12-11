@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block title %}Schedule • F1 Capstone{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">Schedule Hub</h1>
+  <p class="text-secondary small">Select a recent race weekend or view the full {{ year }} calendar.</p>
+
+  <div class="mb-4">
+    <div class="dropdown">
+      <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Last 5 completed races
+      </button>
+      <ul class="dropdown-menu dropdown-menu-dark">
+        {% if last5 %}
+          {% for r in last5 %}
+            <li>
+              <a class="dropdown-item" href="{% url 'f1:schedule_sessions' year=r.season|default:year rnd=r.round %}">
+                Round {{ r.round }} — {{ r.raceName }} ({{ r.Circuit.Location.country }})
+              </a>
+            </li>
+          {% endfor %}
+        {% else %}
+          <li><span class="dropdown-item disabled">No completed races yet.</span></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <a class="btn btn-primary" href="{% url 'f1:schedule_year' year %}">View Full {{ year }} Schedule</a>
+{% endblock %}

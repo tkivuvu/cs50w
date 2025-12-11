@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block title %}
+  {% if as_results %}{{ year }} Results so far • F1 Capstone{% else %}{{ year }} Schedule • F1 Capstone{% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">
+      {% if as_results %}{{ year }} Results so far{% else %}{{ year }} Schedule{% endif %}
+      {% if as_results and completed_rounds and total_rounds %}
+        <span class="badge text-bg-secondary ms-2">{{ completed_rounds }} of {{ total_rounds }} completed</span>
+      {% endif %}
+    </h1>
+
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'f1:schedule' %}">
+      Back to Schedule Hub
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Grand Prix</th>
+          <th>Date</th>
+          <th>Circuit</th>
+          <th>Country</th>
+          <th>Sessions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in races %}
+          <tr>
+            <td>{{ r.round }}</td>
+            <td>{{ r.raceName }}</td>
+            <td>{{ r.date }}</td>
+            <td>{{ r.Circuit.circuitName }}</td>
+            <td>{{ r.Circuit.Location.country }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-light"
+                 href="{% url 'f1:schedule_sessions' year=r.season|default:year rnd=r.round %}">
+                 View
+              </a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-secondary">No races found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

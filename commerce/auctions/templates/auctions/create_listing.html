@@ -1,0 +1,69 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}
+    Create Listing
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="max-width: 720px;">
+        <h2 class="mb-4">Create a Listing</h2>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Title</label>
+                {{ form.title }}
+                {% for err in form.title.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+                {% for err in form.description.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.starting_bid.id_for_label }}">Starting Bid</label>
+                {{ form.starting_bid }}
+                {% for err in form.starting_bid.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.image_url.id_for_label }}">Image URL (optional)</label>
+                {{ form.image_url }}
+                {% for err in form.image_url.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category (optional)</label>
+                {{ form.category }}
+                {% for err in form.category.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+                <small class="form-text text-muted">
+                    Leave empty to automatically file under <strong>"Other"</strong>,
+                    or type a new category name below.
+                </small>
+                {{ form.new_category }}
+                {% for err in form.new_category.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+    </div>
+{% endblock %}

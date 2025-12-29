@@ -1,0 +1,125 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+    <h2>All Posts</h2>
+
+    {% if user.is_authenticated %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title mb-2">New Post</h5>
+            <form method="post" action="{% url 'index' %}">
+                {% csrf_token %}
+                <div class="mb-2">
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.content.errors|striptags }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small id="char-count" class="text-muted">0 / 500</small>
+                    <button id="post-submit" type="submit" class="btn btn-primary">Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+        <div class="alert alert-info">please <a href="{% url 'login' %}">log in</a> to create a post.</div>
+    {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} my-2">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% for post in posts %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'profile' post.author.username %}"><strong>@{{ post.author.username }}</strong></a>
+                    <small class="text-muted">
+                        {{ post.created_at|date:"M d, Y H:i" }}
+                        <span id="post-edited-{{ post.id }}" class="{% if post.was_edited %}{% else %}d-none{% endif %}"> • edited</span>
+                    </small>
+                </div>
+                <p id="post-content-{{ post.id }}" class="mb-0 mt-2">{{ post.content }}</p>
+                <div class="d-flex justify-content-end mt-2 align-items-center" id="post-controls-{{ post.id }}">
+                    <small class="text-muted mr-2">
+                        <span id="post-likes-{{ post.id }}">{{ post.likes_total|default:0 }}</span>
+                        like<span id="post-likes-suffix-{{ post.id }}">{{ post.likes_total|default:0|pluralize }}</span>
+                    </small>
+                    {% if user.is_authenticated %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary post-like-btn ml-2"
+                                data-post-id="{{ post.id }}"
+                                aria-pressed="{{ post.liked_by_me|yesno:'true,false' }}">
+                            {% if post.liked_by_me %}Unlike{% else %}Like{% endif %}
+                        </button>
+                    {% endif %}
+                    {% if user.is_authenticated and user.id == post.author_id %}
+                        <a href="#" id="post-edit-{{ post.id }}" class="post-edit-link small ml-2" data-post-id="{{ post.id }}">
+                            Edit
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No posts yet.</p>
+    {% endfor %}
+
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="All posts pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Page{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const textarea = document.querySelector("#post-content");
+            const counter = document.querySelector("#char-count");
+            const submit = document.querySelector("#post-submit");
+
+            if (!textarea || !counter || !submit) return;
+
+            const Max = 500;
+
+            const update = () => {
+                const len = (textarea.value || "").length;
+                counter.textContent = `${len} / ${Max}`;
+                const empty = textarea.value.trim().length === 0;
+                submit.disabled = empty || len > Max;
+            };
+
+            textarea.addEventListener("input", update);
+            update();
+        });
+    </script>
+    <script src="{% static 'network/edit.js' %}"></script>
+    <script src="{% static 'network/like.js' %}"></script>
+{% endblock %}

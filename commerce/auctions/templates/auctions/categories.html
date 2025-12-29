@@ -1,0 +1,24 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}
+    Categories
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h2 class="mb-4">Categories</h2>
+
+        {% if categories %}
+            <ul class="list-group">
+                {% for c in categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{% url "category_detail" c.id %}">{{ c.name }}</a>
+                        <span class="badge badge-primary badge-pill">{{ c.active_count }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info">No categories yet.</div>
+        {% endif %}
+    </div>
+{% endblock %}

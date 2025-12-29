@@ -1,0 +1,57 @@
+textarea {
+    min-height: 400px;
+}
+
+.email-row {
+  border: 1px solid lightgray;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  cursor: pointer;
+
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.email-row.unread {
+    background: white;
+}
+.email-row.read   {
+    background: gray;
+}
+
+.email-row .who     {
+    flex: 1 1 25%;
+}
+
+.email-row .subject {
+    flex: 1 1 55%;
+}
+
+.email-row .time    {
+    flex: 0 0 auto;
+    opacity: 0.75;
+    white-space: nowrap;
+}
+
+.muted {
+    opacity: 0.7;
+}
+
+.error {
+    color: red;
+    }
+
+.email-body {
+    white-space: pre-wrap;
+}
+
+.controls {
+    margin: 8px 0;
+}
+
+.controls .btn + .btn {
+    margin-left: 8px;
+}

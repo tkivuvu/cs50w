@@ -1,3 +1,104 @@
-:root { --radius: 1rem; }
-.card { border-radius: var(--radius); }
-.table { border-radius: var(--radius); overflow: hidden; }
+:root {
+  --radius: 1rem;
+  --border-color: var(--bs-secondary);
+}
+
+/* ================= GENERAL UI ================= */
+.card,
+.table {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ================= DROPDOWNS ================= */
+
+/* Base dropdown styling */
+.dropdown-menu {
+  border-radius: var(--radius);
+}
+
+/* Standard dropdown width (Results) */
+.dropdown-menu-wide {
+  width: 360px;
+  max-width: calc(100vw - 2rem);
+}
+
+/* Wider dropdown for Schedule (long race names) */
+.dropdown-menu-schedule {
+  width: 400px;
+  max-width: calc(100vw - 2rem);
+}
+
+/* Scroll area inside Schedule and Results dropdowns */
+.dropdown-menu-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Allow long dropdown item text to wrap cleanly */
+.dropdown-menu-scroll .dropdown-item {
+  white-space: normal;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Dropdown panel width for drivers and teams menus */
+.dropdown-panel {
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+}
+
+/* Scrollable dropdown lists inside custom panels */
+.dropdown-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* ================= IMAGES ================= */
+
+/* Driver + Constructor thumbnails */
+.drivers-thumb,
+.constructors-thumb {
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+/* ================= ALERTS ================= */
+
+/* API warning banner */
+.api-warning {
+  border-color: #9c7c00;
+  background-color: #2a2300;
+  color: #ffd666;
+}
+
+/* ================= NAV UTILITIES ================= */
+
+/* Logout button fix (align with nav links) */
+.nav-logout-btn {
+  line-height: 1.5;
+  vertical-align: middle;
+  padding: 0;
+}
+
+/* ================= HOMEPAGE ================= */
+
+/* Hero section text width (home page intro paragraph) */
+.hero-copy {
+  max-width: 720px;
+}
+
+/* Subtle hover effect for clickable cards */
+.hover-border-light:hover {
+  border-color: var(--bs-light) !important;
+}

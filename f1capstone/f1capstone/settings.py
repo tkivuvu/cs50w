@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "f1.context_processors.debug_context",
                 'f1.context_processors.schedule_menu',
                 'f1.context_processors.results_menu',
                 'f1.context_processors.drivers_menu',

@@ -1,4 +1,5 @@
 import time
+import unicodedata
 from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.contrib import messages
@@ -7,27 +8,36 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.http import Http404
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from .context_processors import CURRENT_DRIVER_IDS
 from .forms import SignUpForm
 from .models import FavoriteDriver, FavoriteConstructor
 from .news import fetch_news_rss, driver_query, team_query
 from .services import JolpiClient, url_for_year, url_for_round
 
 
-CURRENT_YEAR = 2025
+CURRENT_YEAR = 2026
 
 _RESULTS_CACHE: dict[str, dict] = {}   
-_CACHE_TTL = timedelta(minutes=5)
+_CACHE_TTL = timedelta(seconds=0) if settings.DEBUG else timedelta(minutes=5)
+
 
 def _cache_get(key: str):
+    if settings.DEBUG:
+        return None
+
     rec = _RESULTS_CACHE.get(key)
     if not rec:
         return None
-    if datetime.utcnow() - rec["ts"] > _CACHE_TTL:
+    if timezone.now() - rec["ts"] > _CACHE_TTL:
         return None
     return rec["data"]
 
+
 def _cache_set(key: str, data: dict):
-    _RESULTS_CACHE[key] = {"ts": datetime.utcnow(), "data": data}
+    if settings.DEBUG:
+        return
+    _RESULTS_CACHE[key] = {"ts": timezone.now(), "data": data}
 
 def _load_year_collection(resource: str, year: int, per_page: int = 200) -> dict:
     """
@@ -444,16 +454,30 @@ def results_year_hub(request, year: int):
     return render(request, 'f1/results_year_hub.html', context)
 
 
+def _slugify_name_part(value: str) -> str:
+    """
+    Normalize a name part for static filenames:
+    - lowercase
+    - remove accents
+    - replace spaces/underscores with hyphens
+    """
+    value = (value or "").strip().lower()
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = value.replace("_", "-").replace(" ", "-")
+    return value
+
+
 def _slug_full_image_name(driver: dict) -> str:
     """
-    Build full-size image filename 'lastname-firstname.png' (lowercase; spaces -> hyphens).
-    Matches your /static/f1/img/drivers/full/<...>.png files, e.g.:
-      norris-lando.png, albon-alex.png, antonelli-kimi-andrea.png
+    Build full-size image filename 'lastname-firstname.png'.
+    Examples:
+      norris-lando.png
+      perez-sergio.png
+      antonelli-andrea-kimi.png
     """
-    fam = (driver.get("familyName") or "").strip().lower().replace(" ", "-")
-    giv = (driver.get("givenName") or "").strip().lower().replace(" ", "-")
-    return f"{fam}-{giv}.png" if fam or giv else "placeholder.png"
-
+    fam = _slugify_name_part(driver.get("familyName", ""))
+    giv = _slugify_name_part(driver.get("givenName", ""))
+    return f"{fam}-{giv}.png" if (fam or giv) else "placeholder.png"
 
 def _parse_iso(d: str) -> date | None:
     try:
@@ -791,24 +815,37 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
     """
     season = year or date.today().year
 
-    drivers = _constructor_drivers(season, constructor_id)
+    # Keep API-safe constructor id for lookups / image filenames
+    constructor_slug = constructor_id
+
+    # Clean display name for templates
+    constructor_name = constructor_slug.replace("_", " ")
+
+    drivers = _constructor_drivers(season, constructor_slug)
+
+    # Keep only current grid drivers for the team page
+    drivers = [
+        d for d in drivers
+        if d.get("driverId") in CURRENT_DRIVER_IDS
+    ]
+
+    # Sort by permanent number so the two current race drivers appear consistently
+    drivers = sorted(drivers, key=lambda d: int(d.get("permanentNumber") or 999))
 
     driver_cards = []
     for d in drivers[:2]:
-        fam = (d.get("familyName") or "").strip().lower().replace(" ", "-")
-        giv = (d.get("givenName") or "").strip().lower().replace(" ", "-")
-        full_img = f"{fam}-{giv}.png" if (fam or giv) else "placeholder.png"
+        full_img = _slug_full_image_name(d)
         driver_cards.append({
-            "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+            "name": f"{d.get('givenName', '')} {d.get('familyName', '')}".strip(),
             "number": d.get("permanentNumber") or "—",
             "nationality": (d.get("nationality") or "").lower(),
             "driverId": d.get("driverId"),
             "img": full_img,
         })
 
-    livery_img = f"{constructor_id.replace('_', '-').lower()}.png"
+    livery_img = f"{constructor_slug.replace('_', '-').lower()}.png"
 
-    standing = _constructor_standing(season, constructor_id) or {}
+    standing = _constructor_standing(season, constructor_slug) or {}
     season_pos = standing.get("position")
     season_pts = standing.get("points")
 
@@ -816,7 +853,7 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
     by_round_date = {r["round"]: r["date"] for r in races_calendar}
     today = date.today()
 
-    gp_races = _constructor_results(season, constructor_id)
+    gp_races = _constructor_results(season, constructor_slug)
     gp_entered = 0
     gp_points = 0.0
     gp_wins = 0
@@ -830,9 +867,11 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
         rdate = by_round_date.get(rnd)
         if not rdate or rdate > today:
             continue
+
         results = race.get("Results", []) or []
         if not results:
             continue
+
         gp_entered += 1
 
         for res in results:
@@ -853,7 +892,7 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
             if _is_mechanical_dnf_from_status(status, pos_text):
                 gp_dnfs += 1
 
-    sp_races = _constructor_sprint(season, constructor_id)
+    sp_races = _constructor_sprint(season, constructor_slug)
     sp_entered = 0
     sp_points = 0.0
     sp_wins = 0
@@ -865,9 +904,11 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
         rdate = by_round_date.get(rnd)
         if not rdate or rdate > today:
             continue
+
         results = race.get("SprintResults", []) or []
         if not results:
             continue
+
         sp_entered += 1
 
         for res in results:
@@ -883,12 +924,14 @@ def constructor_detail(request, constructor_id: str, year: int | None = None):
     is_favorite = False
     if request.user.is_authenticated:
         is_favorite = FavoriteConstructor.objects.filter(
-            user=request.user, constructor_id=constructor_id
+            user=request.user,
+            constructor_id=constructor_slug
         ).exists()
 
     ctx = {
         "year": season,
-        "constructor_id": constructor_id,
+        "constructor_id": constructor_slug,
+        "constructor_name": constructor_name,
         "driver_cards": driver_cards,
         "livery_img": livery_img,
 
@@ -959,23 +1002,46 @@ def signup(request):
 @login_required
 def my_hub(request):
     fav_drivers = list(FavoriteDriver.objects.filter(user=request.user).order_by("-added_at"))
-    fav_teams   = list(FavoriteConstructor.objects.filter(user=request.user).order_by("-added_at"))
+    fav_teams = list(FavoriteConstructor.objects.filter(user=request.user).order_by("-added_at"))
 
-    limit   = getattr(settings, "NEWS_RSS_LIMIT", 8)
+    limit = getattr(settings, "NEWS_RSS_LIMIT", 8)
     timeout = getattr(settings, "NEWS_RSS_TIMEOUT", 5.0)
-    ttl     = getattr(settings, "NEWS_RSS_TTL", 1800)
+    ttl = getattr(settings, "NEWS_RSS_TTL", 1800)
 
     for fd in fav_drivers:
-        given  = getattr(fd, "given_name", "")
-        family = getattr(fd, "family_name", "")
-        cons   = getattr(fd, "constructor_name", None)
-        q = driver_query(given, family, cons)
+        driver = _driver_record_from_year(CURRENT_YEAR, fd.driver_id)
+        standing = _standing_for_driver(CURRENT_YEAR, fd.driver_id)
+
+        given = ""
+        family = ""
+        constructor = None
+
+        if driver:
+            given = driver.get("givenName", "")
+            family = driver.get("familyName", "")
+
+        if standing:
+            constructors = standing.get("Constructors") or []
+            if constructors:
+                constructor = constructors[0].get("name")
+
+        # Fallback to driver_id if API lookup fails
+        if not given and not family:
+            given = fd.driver_id.replace("_", " ")
+            family = ""
+
+        q = driver_query(given, family, constructor)
         fd.news = fetch_news_rss(q, limit=limit, timeout=timeout, ttl=ttl)
 
+        # Optional display helpers for template
+        fd.display_name = f"{given} {family}".strip() if (given or family) else fd.driver_id.replace("_", " ").title()
+        fd.constructor_name = constructor
+
     for ft in fav_teams:
-        name = getattr(ft, "constructor_name", ft.constructor_id)
+        name = getattr(ft, "constructor_name", None) or ft.constructor_id.replace("_", " ")
         q = team_query(name)
         ft.news = fetch_news_rss(q, limit=limit, timeout=timeout, ttl=ttl)
+        ft.display_name = name
 
     global_news = fetch_news_rss("Formula 1 OR F1", limit=10, timeout=timeout, ttl=ttl)
 

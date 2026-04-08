@@ -48,7 +48,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                   <div class="d-flex align-items-center gap-2">
                     <a class="link-light" href="{% url 'f1:driver_detail' fd.driver_id %}">
-                      {{ fd.driver_id|title }}
+                      {{ fd.display_name|default:fd.driver_id|title }}
                     </a>
                     <span class="text-secondary small">· added {{ fd.added_at|date:"M j, H:i" }}</span>
                   </div>
@@ -98,7 +98,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                   <div class="d-flex align-items-center gap-2">
                     <a class="link-light" href="{% url 'f1:constructor_detail' ft.constructor_id %}">
-                      {{ ft.constructor_id|title }}
+                      {{ ft.display_name|default:ft.constructor_id|title }}
                     </a>
                     <span class="text-secondary small">· added {{ ft.added_at|date:"M j, H:i" }}</span>
                   </div>

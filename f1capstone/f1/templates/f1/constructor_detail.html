@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
 {% load static %}
-{% block title %}Team • {{ constructor_id|title }} • {{ year }} • F1 Capstone{% endblock %}
+{% block title %}Team • {{ constructor_name|title }} • {{ year }} • F1 Capstone{% endblock %}
 
 {% block content %}
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">{{ constructor_id|title }}</h1>
+    <h1 class="h4 mb-0">{{ constructor_name|title }}</h1>
     <div>
       {% if user.is_authenticated %}
         <form method="post" action="{% url 'f1:favorite_constructor_toggle' constructor_id %}">
@@ -27,9 +27,9 @@
     {% for d in driver_cards %}
       <div class="col-12 col-md-6">
         <div class="card bg-black border-secondary h-100">
-          <div class="card-body d-flex gap-3 align-items-center">
+          <div class="card-body d-flex gap-3 align-items-center"> 
             <img
-              src="{% static 'f1/img/drivers/full/' %}{{ d.img }}"
+              src="{% static 'f1/img/drivers/full/' %}{{ d.img }}{% if debug %}?v={{ now|date:'U' }}{% endif %}"
               alt="{{ d.name }}"
               width="140" height="140"
               style="object-fit:cover;object-position:top center;border:1px solid var(--bs-secondary);border-radius:16px;"
@@ -61,9 +61,9 @@
     {% endfor %}
   </div>
 
-  <div class="mb-4 text-center">
+  <div class="mb-4 text-center">  
     <img
-      src="{% static 'f1/img/constructors/full/' %}{{ livery_img }}"
+      src="{% static 'f1/img/constructors/full/' %}{{ livery_img }}{% if debug %}?v={{ now|date:'U' }}{% endif %}"
       alt="{{ constructor_id }} livery"
       style="max-width:100%;height:auto;border:1px solid var(--bs-secondary);border-radius:16px;"
       onerror="this.style.display='none'">

@@ -1,14 +1,39 @@
 from __future__ import annotations
-import httpx
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from typing import List, Dict, Any
 from .services import JolpiClient, url_for_year
+import unicodedata
 
-CURRENT_YEAR = 2025
+CURRENT_YEAR = 2026
+
+CURRENT_DRIVER_IDS = {
+    "albon",
+    "alonso",
+    "antonelli",
+    "arvid_lindblad",
+    "bearman",
+    "bortoleto",
+    "bottas",
+    "colapinto",
+    "gasly",
+    "hadjar",
+    "hamilton",
+    "hulkenberg",
+    "lawson",
+    "leclerc",
+    "max_verstappen",
+    "norris",
+    "ocon",
+    "perez",
+    "piastri",
+    "russell",
+    "sainz",
+    "stroll",
+}
 
 # ---- API health ----
 API_HEALTH_KEY = "api_health_simple_ok"
@@ -25,6 +50,13 @@ _CONSTRUCTORS_TTL = timedelta(minutes=10)
 # ---- Drivers menu cache ----
 _DRIVERS_CACHE = {"ts": None, "year": None, "items": None}
 _DRIVERS_TTL = timedelta(minutes=30)
+
+# ---- Cache Disabling ----
+def debug_context(request):
+    return {
+        "debug": settings.DEBUG,
+        "now": timezone.now(),
+    }
 
 # ---- API health function ----
 def _quick_ping() -> bool:
@@ -152,40 +184,67 @@ def _fetch_year_drivers(year: int) -> List[Dict[str, Any]]:
         .get("DriverTable", {})
         .get("Drivers", [])
     )
+    
 
+def _slugify_name_part(value: str) -> str:
+    """
+    Normalize a name part for static filenames:
+    - lowercase
+    - remove accents
+    - replace spaces/underscores with hyphens
+    """
+    value = (value or "").strip().lower()
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = value.replace("_", "-").replace(" ", "-")
+    return value
 
 def _thumb_filename_for_driver(d: Dict[str, Any]) -> str:
     """
-    Build thumbs filename like 'lastname-firstname.png' (lowercase, spaces -> hyphens).
+    Build thumbs filename like 'lastname-firstname.png'.
     Examples:
-      'norris-lando.png', 'albon-alex.png', 'antonelli-kimi-andrea.png'
+      'norris-lando.png'
+      'albon-alex.png'
+      'antonelli-kimi-andrea.png'
+      'perez-sergio.png'
     """
-    family = (d.get("familyName") or "").strip().lower().replace(" ", "-")
-    given = (d.get("givenName") or "").strip().lower().replace(" ", "-")
+    family = _slugify_name_part(d.get("familyName", ""))
+    given = _slugify_name_part(d.get("givenName", ""))
     return f"{family}-{given}.png" if family or given else "unknown.png"
 
 
 def drivers_menu(request):
     """
-    Provide Drivers dropdown: all current-year drivers (excluding Jack Doohan),
-    sorted alphabetically by last name, each with a computed thumbnails filename.
+    Provide Drivers dropdown: current F1 grid only (manually defined),
+    sorted alphabetically by last name, with computed thumbnail filenames.
     """
     now = timezone.now()
+    year = CURRENT_YEAR
+
     if (
         _DRIVERS_CACHE["ts"] is None
-        or _DRIVERS_CACHE["year"] != CURRENT_YEAR
+        or _DRIVERS_CACHE["year"] != year
         or _DRIVERS_CACHE["items"] is None
         or now - _DRIVERS_CACHE["ts"] > _DRIVERS_TTL
     ):
-        drivers = _fetch_year_drivers(CURRENT_YEAR)
+        drivers = _fetch_year_drivers(year)
 
-        drivers = [d for d in drivers if (d.get("familyName") or "").lower() != "doohan"]
+        # Filter to current grid only
+        drivers = [
+            d for d in drivers
+            if d.get("driverId") in CURRENT_DRIVER_IDS
+        ]
 
-        drivers.sort(key=lambda d: (d.get("familyName") or "").lower())
+        # Sort by last name, then first name
+        drivers.sort(
+            key=lambda d: (
+                (d.get("familyName") or "").lower(),
+                (d.get("givenName") or "").lower(),
+            )
+        )
 
         items = []
         for d in drivers:
-            driver_id = d.get("driverId")  
+            driver_id = d.get("driverId")
             given = d.get("givenName", "")
             family = d.get("familyName", "")
             label = f"{family}, {given}".strip(", ")
@@ -194,14 +253,18 @@ def drivers_menu(request):
                 "driverId": driver_id,
                 "label": label,
                 "url": reverse("f1:driver_detail", args=[driver_id]),
-                "thumb": _thumb_filename_for_driver(d),  
+                "thumb": _thumb_filename_for_driver(d),
             })
 
-        _DRIVERS_CACHE.update({"ts": now, "year": CURRENT_YEAR, "items": items})
+        _DRIVERS_CACHE.update({
+            "ts": now,
+            "year": year,
+            "items": items
+        })
 
     return {
         "DRIVERS_MENU": {
-            "year": CURRENT_YEAR,
+            "year": year,
             "items": _DRIVERS_CACHE["items"] or [],
         }
     }
@@ -217,28 +280,30 @@ def _fetch_year_constructors(year: int):
             .get("Constructors", [])
     )
 
-def _constructor_thumb_filename(c: dict) -> str:
+def _constructor_thumb_filename(c: Dict[str, Any]) -> str:
     """
-    Prefer constructorId with underscores -> hyphens, then .png
-    e.g., 'aston_martin' -> 'aston-martin.png', 'red_bull' -> 'red-bull.png'
+    Prefer constructorId normalized to a static thumbnail filename.
+    Examples:
+      'aston_martin' -> 'aston-martin.png'
+      'red_bull' -> 'red-bull.png'
+      'cadillac' -> 'cadillac.png'
     """
-    cid = (c.get("constructorId") or "").strip().lower()
-    return f"{cid.replace('_', '-')}.png" if cid else "placeholder.png"
+    cid = _slugify_name_part(c.get("constructorId", ""))
+    return f"{cid}.png" if cid else "placeholder.png"
 
 def constructors_menu(request):
-    """Provide Teams dropdown: all current-year constructors (A→Z), dead links for now."""
-    from .context_processors import CURRENT_YEAR  
-    now = datetime.utcnow()
+    """Provide Teams dropdown: all current-year constructors (A→Z)."""
+    now = timezone.now()
+    year = CURRENT_YEAR
 
     if (
         _CONSTRUCTORS_CACHE["ts"] is None
-        or _CONSTRUCTORS_CACHE["year"] != CURRENT_YEAR
+        or _CONSTRUCTORS_CACHE["year"] != year
         or _CONSTRUCTORS_CACHE["items"] is None
         or now - _CONSTRUCTORS_CACHE["ts"] > _CONSTRUCTORS_TTL
     ):
-        teams = _fetch_year_constructors(CURRENT_YEAR)
+        teams = _fetch_year_constructors(year)
 
-        
         teams.sort(key=lambda c: (c.get("name") or "").lower())
 
         items = []
@@ -250,11 +315,15 @@ def constructors_menu(request):
                 "url": reverse("f1:constructor_detail", args=[c.get("constructorId")]),
             })
 
-        _CONSTRUCTORS_CACHE.update({"ts": now, "year": CURRENT_YEAR, "items": items})
+        _CONSTRUCTORS_CACHE.update({
+            "ts": now,
+            "year": year,
+            "items": items
+        })
 
     return {
         "CONSTRUCTORS_MENU": {
-            "year": CURRENT_YEAR,
+            "year": year,
             "items": _CONSTRUCTORS_CACHE["items"] or [],
         }
     }

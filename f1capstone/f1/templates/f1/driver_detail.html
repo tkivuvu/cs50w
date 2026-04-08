@@ -6,12 +6,12 @@
   <div class="row g-4 align-items-center mb-4">
     <div class="col-12 col-md-auto text-center">
       <img
-        src="{% static 'f1/img/drivers/full/' %}{{ full_img }}"
+        src="{% static 'f1/img/drivers/full/' %}{{ full_img }}{% if debug %}?v={{ now|date:'U' }}{% endif %}"
         alt="{{ driver.givenName }} {{ driver.familyName }}"
         width="240" height="240"
         style="
           object-fit: cover;
-          object-position: top center;   /* you can tweak to '0 10%' if you want a higher crop */
+          object-position: top center;
           border: 1px solid var(--bs-secondary);
           border-radius: 16px;
           margin-right: 20px;
@@ -24,7 +24,7 @@
       <div class="d-flex align-items-center justify-content-between mb-1">
         <div class="d-flex align-items-center gap-2">
           <img
-            src="{% static 'f1/img/flags/' %}{{ nationality }}.png"
+            src="{% static 'f1/img/flags/' %}{{ nationality }}.png{% if debug %}?v={{ now|date:'U' }}{% endif %}"
             alt="{{ driver.nationality }}"
             width="24" height="16"
             style="object-fit:cover;border:1px solid var(--bs-secondary);border-radius:2px;"
@@ -133,4 +133,3 @@
     </div>
   </div>
 {% endblock %}
-

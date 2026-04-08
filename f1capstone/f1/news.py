@@ -60,12 +60,13 @@ def fetch_news_rss(query: str, *, limit: int = 8, timeout: float = 5.0, ttl: int
     cache.set(key, articles, ttl)
     return articles
 
-
 def driver_query(given: str, family: str, constructor: str | None = None) -> str:
-    parts = [f"{given} {family}", "F1"]
+    name = " ".join(p for p in [given, family] if p).strip()
+    parts = [name, "F1"]
     if constructor:
         parts.append(constructor)
     return " ".join(p for p in parts if p)
 
 def team_query(name: str) -> str:
     return f"{name} F1"
+

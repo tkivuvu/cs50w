@@ -1,21 +1,21 @@
 {% extends "layout.html" %}
 
-{% block title %}F1 Analysis • Home{% endblock %}
+{% block title %}F1 Hub • Home{% endblock %}
 
 {% block content %}
   <section class="text-center mb-5">
     <p class="text-uppercase text-secondary small mb-1">CS50W Capstone Project</p>
-    <h1 class="display-6 fw-semibold mb-3">F1 Analysis</h1>
-    <p class="text-secondary mx-auto" style="max-width: 720px;">
-      A Formula 1 data hub powered by the Jolpi/Ergast API. Explore live and historical race
+    <h1 class="display-6 fw-semibold mb-3">F1 Hub</h1>
+    <p class="text-secondary mx-auto hero-copy">
+      A Formula 1 data hub powered by the Jolpi/Ergast API. Explore current and historical race
       data, detailed driver and team profiles, and build your own personalized F1 hub with favorites
       and news.
     </p>
 
     <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-      <span class="badge rounded-pill text-bg-secondary">Live season data</span>
+      <span class="badge rounded-pill text-bg-secondary">Current season data</span>
       <span class="badge rounded-pill text-bg-secondary">Driver &amp; team stats</span>
-      <span class="badge rounded-pill text-bg-secondary">Personalized “My Hub”</span>
+      <span class="badge rounded-pill text-bg-secondary">Personalized My Hub</span>
       <span class="badge rounded-pill text-bg-secondary">F1 news integration</span>
     </div>
   </section>
@@ -53,8 +53,8 @@
               </div>
               <div>
                 Open rich <strong>driver detail pages</strong> with photos, national flags, team and
-                livery number, WDC position &amp; points, full GP &amp; sprint stat summaries, and the
-                driver's recent race form.
+                car number, WDC position &amp; points, full GP &amp; sprint stat summaries, and recent
+                race form.
               </div>
             </div>
 
@@ -91,26 +91,26 @@
 
           <div class="row row-cols-1 g-2 mb-3">
             <div class="col">
-              <a href="{% url 'f1:results_season' 2025 %}" class="text-decoration-none">
+              <a href="{% url 'f1:results_season' RESULTS_MENU.year %}" class="text-decoration-none">
                 <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
                   <div class="small text-secondary">Season overview</div>
-                  <div class="fw-semibold">2025 Season Results</div>
+                  <div class="fw-semibold">{{ RESULTS_MENU.year }} Season Results</div>
                 </div>
               </a>
             </div>
             <div class="col">
-              <a href="{% url 'f1:standings_drivers' 2025 %}" class="text-decoration-none">
+              <a href="{% url 'f1:standings_drivers' RESULTS_MENU.year %}" class="text-decoration-none">
                 <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
                   <div class="small text-secondary">Championship table</div>
-                  <div class="fw-semibold">2025 Driver Standings</div>
+                  <div class="fw-semibold">{{ RESULTS_MENU.year }} Driver Standings</div>
                 </div>
               </a>
             </div>
             <div class="col">
-              <a href="{% url 'f1:standings_constructors' 2025 %}" class="text-decoration-none">
+              <a href="{% url 'f1:standings_constructors' RESULTS_MENU.year %}" class="text-decoration-none">
                 <div class="border border-secondary rounded-3 px-3 py-2 h-100 hover-border-light">
                   <div class="small text-secondary">Teams' battle</div>
-                  <div class="fw-semibold">2025 Constructor Standings</div>
+                  <div class="fw-semibold">{{ RESULTS_MENU.year }} Constructor Standings</div>
                 </div>
               </a>
             </div>
